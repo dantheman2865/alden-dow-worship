@@ -89,12 +89,18 @@ function emptyEdit(id) {
   return { id, visited: false, date: "", notes: "", photos: [] };
 }
 
+// A committed photo may be a legacy string path or a { full, thumb } object.
+function repoPhotoEntry(p) {
+  if (typeof p === "string") return { kind: "repo", full: p, thumb: p };
+  return { kind: "repo", full: p.full, thumb: p.thumb || p.full };
+}
+
 function committedToEntry(visit) {
   return {
     visited: !!visit.visited,
     date: visit.date || "",
     notes: visit.notes || "",
-    photos: (visit.photos || []).map((path) => ({ kind: "repo", path })),
+    photos: (visit.photos || []).map(repoPhotoEntry),
   };
 }
 
@@ -166,15 +172,35 @@ function uniqueName(existingNames, desired) {
   return candidate;
 }
 
+// Downscale an image to a small JPEG thumbnail. Falls back to the original on failure.
+async function makeThumb(file, max = 480, quality = 0.82) {
+  try {
+    const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
+    const w = Math.max(1, Math.round(bitmap.width * scale));
+    const h = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext("2d").drawImage(bitmap, 0, 0, w, h);
+    bitmap.close();
+    const blob = await new Promise((res) => canvas.toBlob(res, "image/jpeg", quality));
+    return blob || file;
+  } catch {
+    return file;
+  }
+}
+
 export async function addPhoto(id, file) {
   const edit = await ensureEdit(id);
   const existing = new Set(
-    edit.photos.map((p) => (p.kind === "repo" ? p.path.split("/").pop() : p.name))
+    edit.photos.map((p) => (p.kind === "repo" ? p.full.split("/").pop() : p.name))
   );
   const name = uniqueName(existing, sanitizeName(file.name));
   const key = crypto.randomUUID();
+  const thumb = await makeThumb(file);
   await tx("photos", "readwrite", (store) =>
-    reqToPromise(store.put({ key, id, name, blob: file }))
+    reqToPromise(store.put({ key, id, name, full: file, thumb }))
   );
   edit.photos.push({ kind: "local", key, name });
   await putEdit(edit);
@@ -187,10 +213,13 @@ export async function removePhoto(id, index) {
   if (!entry) return edit;
   if (entry.kind === "local") {
     await tx("photos", "readwrite", (store) => reqToPromise(store.delete(entry.key)));
-    const url = objectUrlCache.get(entry.key);
-    if (url) {
-      URL.revokeObjectURL(url);
-      objectUrlCache.delete(entry.key);
+    for (const variant of ["full", "thumb"]) {
+      const cacheKey = entry.key + ":" + variant;
+      const url = objectUrlCache.get(cacheKey);
+      if (url) {
+        URL.revokeObjectURL(url);
+        objectUrlCache.delete(cacheKey);
+      }
     }
   }
   edit.photos.splice(index, 1);
@@ -202,14 +231,16 @@ async function getBlob(key) {
   return tx("photos", "readonly", (store) => reqToPromise(store.get(key)));
 }
 
-// Resolve a photo entry to a displayable src (repo path or object URL for local blobs).
-export async function photoSrc(entry) {
-  if (entry.kind === "repo") return entry.path;
-  if (objectUrlCache.has(entry.key)) return objectUrlCache.get(entry.key);
+// Resolve a photo entry to a displayable src. variant is "thumb" (grid) or "full" (lightbox).
+export async function photoSrc(entry, variant = "full") {
+  if (entry.kind === "repo") return variant === "thumb" ? entry.thumb : entry.full;
+  const cacheKey = entry.key + ":" + variant;
+  if (objectUrlCache.has(cacheKey)) return objectUrlCache.get(cacheKey);
   const rec = await getBlob(entry.key);
   if (!rec) return "";
-  const url = URL.createObjectURL(rec.blob);
-  objectUrlCache.set(entry.key, url);
+  const blob = variant === "thumb" ? rec.thumb || rec.full : rec.full;
+  const url = URL.createObjectURL(blob);
+  objectUrlCache.set(cacheKey, url);
   return url;
 }
 
@@ -234,12 +265,17 @@ async function buildPublish() {
     const paths = [];
     for (const entry of edit.photos) {
       if (entry.kind === "repo") {
-        paths.push(entry.path);
+        paths.push({ full: entry.full, thumb: entry.thumb || entry.full });
       } else {
-        const path = `photos/${edit.id}/${entry.name}`;
-        paths.push(path);
+        const base = entry.name.replace(/\.[^.]+$/, "");
+        const full = `photos/${edit.id}/${entry.name}`;
+        const thumb = `photos/${edit.id}/thumb/${base}.jpg`;
+        paths.push({ full, thumb });
         const rec = await getBlob(entry.key);
-        if (rec) photoFiles.push({ path, blob: rec.blob });
+        if (rec) {
+          photoFiles.push({ path: full, blob: rec.full });
+          photoFiles.push({ path: thumb, blob: rec.thumb || rec.full });
+        }
       }
     }
     const visit = {

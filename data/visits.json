@@ -6,10 +6,22 @@
       "date": "2026-04-05",
       "notes": "Visited with my sister on Easter Sunday",
       "photos": [
-        "photos/1952-st-johns-episcopal-church-parsonage-and-apartment-midland-michigan/pxl_20260405_145929936.jpg",
-        "photos/1952-st-johns-episcopal-church-parsonage-and-apartment-midland-michigan/pxl_20260405_152126034.jpg",
-        "photos/1952-st-johns-episcopal-church-parsonage-and-apartment-midland-michigan/pxl_20260405_152134532-mp.jpg",
-        "photos/1952-st-johns-episcopal-church-parsonage-and-apartment-midland-michigan/pxl_20260405_152224652.jpg"
+        {
+          "full": "photos/1952-st-johns-episcopal-church-parsonage-and-apartment-midland-michigan/pxl_20260405_145929936.jpg",
+          "thumb": "photos/1952-st-johns-episcopal-church-parsonage-and-apartment-midland-michigan/thumb/pxl_20260405_145929936.jpg"
+        },
+        {
+          "full": "photos/1952-st-johns-episcopal-church-parsonage-and-apartment-midland-michigan/pxl_20260405_152126034.jpg",
+          "thumb": "photos/1952-st-johns-episcopal-church-parsonage-and-apartment-midland-michigan/thumb/pxl_20260405_152126034.jpg"
+        },
+        {
+          "full": "photos/1952-st-johns-episcopal-church-parsonage-and-apartment-midland-michigan/pxl_20260405_152134532-mp.jpg",
+          "thumb": "photos/1952-st-johns-episcopal-church-parsonage-and-apartment-midland-michigan/thumb/pxl_20260405_152134532-mp.jpg"
+        },
+        {
+          "full": "photos/1952-st-johns-episcopal-church-parsonage-and-apartment-midland-michigan/pxl_20260405_152224652.jpg",
+          "thumb": "photos/1952-st-johns-episcopal-church-parsonage-and-apartment-midland-michigan/thumb/pxl_20260405_152224652.jpg"
+        }
       ]
     },
     "1955-grand-haven-methodist-church-grand-haven-michigan": {
@@ -17,9 +29,18 @@
       "date": "2026-06-07",
       "notes": "Visited while on vacation. I love how the choir loft rises with the slope of the ceiling",
       "photos": [
-        "photos/1955-grand-haven-methodist-church-grand-haven-michigan/pxl_20260607_132833121.jpg",
-        "photos/1955-grand-haven-methodist-church-grand-haven-michigan/pxl_20260607_133036018.jpg",
-        "photos/1955-grand-haven-methodist-church-grand-haven-michigan/pxl_20260607_135146871.jpg"
+        {
+          "full": "photos/1955-grand-haven-methodist-church-grand-haven-michigan/pxl_20260607_132833121.jpg",
+          "thumb": "photos/1955-grand-haven-methodist-church-grand-haven-michigan/thumb/pxl_20260607_132833121.jpg"
+        },
+        {
+          "full": "photos/1955-grand-haven-methodist-church-grand-haven-michigan/pxl_20260607_133036018.jpg",
+          "thumb": "photos/1955-grand-haven-methodist-church-grand-haven-michigan/thumb/pxl_20260607_133036018.jpg"
+        },
+        {
+          "full": "photos/1955-grand-haven-methodist-church-grand-haven-michigan/pxl_20260607_135146871.jpg",
+          "thumb": "photos/1955-grand-haven-methodist-church-grand-haven-michigan/thumb/pxl_20260607_135146871.jpg"
+        }
       ]
     }
   }

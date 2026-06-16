@@ -291,13 +291,16 @@ async function renderPhotos(id, eff) {
 
   for (let i = 0; i < eff.photos.length; i++) {
     const entry = eff.photos[i];
-    const src = await store.photoSrc(entry);
+    const thumbSrc = await store.photoSrc(entry, "thumb");
     const cell = document.createElement("div");
     cell.className = "photo-cell";
-    cell.innerHTML = `<img src="${src}" alt="" loading="lazy" />${
+    cell.innerHTML = `<img src="${thumbSrc}" alt="" loading="lazy" />${
       state.editMode ? `<button class="photo-remove" title="Remove">&times;</button>` : ""
     }`;
-    cell.querySelector("img").addEventListener("click", () => openLightbox(src));
+    // Load the full-resolution image only when the user zooms in.
+    cell.querySelector("img").addEventListener("click", async () =>
+      openLightbox(await store.photoSrc(entry, "full"))
+    );
     if (state.editMode) {
       cell.querySelector(".photo-remove").addEventListener("click", async (ev) => {
         ev.stopPropagation();

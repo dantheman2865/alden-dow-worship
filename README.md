@@ -72,7 +72,8 @@ the local staging area can be cleared.
 | `js/zip.js` | Dependency-free ZIP builder (publish fallback) |
 | `alden_dow_religious_buildings.json` | Research data (source of truth, unchanged) |
 | `data/visits.json` | Committed visit log |
-| `photos/<id>/` | Committed photos, keyed by building id |
+| `photos/<id>/` | Committed full-resolution photos, keyed by building id |
+| `photos/<id>/thumb/` | Auto-generated ~480px thumbnails (used in the grid) |
 
 Building ids are generated deterministically from `year + structure_name + location`,
 so the research file never needs editing.
@@ -84,4 +85,10 @@ so the research file never needs editing.
   the map.
 - Photos committed here are **public** — that's the intended trade-off for a shareable
   site.
+- Each photo is stored twice: the full-resolution original (shown when you click to zoom)
+  and an auto-generated ~480px thumbnail under `thumb/` (shown in the gallery grid), so
+  pages stay fast. The editor generates thumbnails automatically; the published site
+  loads thumbnails first and only fetches the full image on click. Note: the **Pages
+  published-site limit is 1 GB** — storing full-res originals is the main thing that
+  counts against it.
 - Map tiles: OpenStreetMap via Leaflet (no API key, no billing).
