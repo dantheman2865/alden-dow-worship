@@ -237,7 +237,7 @@ function flyToRecord(record) {
   const targetZoom = Math.max(map.getZoom(), 14);
   const point = map.project([record.lat, record.lng], targetZoom);
   if (window.innerWidth > 820) point.x += 230; // ~half the 460px panel width
-  map.flyTo(map.unproject(point, targetZoom), targetZoom, { duration: 0.6 });
+  map.flyTo(map.unproject(point, targetZoom), targetZoom, { duration: 1.5 });
   const marker = state.markers.get(record.id);
   if (marker) marker.openTooltip();
 }
