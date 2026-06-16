@@ -1,4 +1,26 @@
 {
   "version": 1,
-  "visits": {}
+  "visits": {
+    "1952-st-johns-episcopal-church-parsonage-and-apartment-midland-michigan": {
+      "visited": true,
+      "date": "2026-04-05",
+      "notes": "Visited with my sister on Easter Sunday",
+      "photos": [
+        "photos/1952-st-johns-episcopal-church-parsonage-and-apartment-midland-michigan/pxl_20260405_145929936.jpg",
+        "photos/1952-st-johns-episcopal-church-parsonage-and-apartment-midland-michigan/pxl_20260405_152126034.jpg",
+        "photos/1952-st-johns-episcopal-church-parsonage-and-apartment-midland-michigan/pxl_20260405_152134532-mp.jpg",
+        "photos/1952-st-johns-episcopal-church-parsonage-and-apartment-midland-michigan/pxl_20260405_152224652.jpg"
+      ]
+    },
+    "1955-grand-haven-methodist-church-grand-haven-michigan": {
+      "visited": true,
+      "date": "2026-06-07",
+      "notes": "Visited while on vacation. I love how the choir loft rises with the slope of the ceiling",
+      "photos": [
+        "photos/1955-grand-haven-methodist-church-grand-haven-michigan/pxl_20260607_132833121.jpg",
+        "photos/1955-grand-haven-methodist-church-grand-haven-michigan/pxl_20260607_133036018.jpg",
+        "photos/1955-grand-haven-methodist-church-grand-haven-michigan/pxl_20260607_135146871.jpg"
+      ]
+    }
+  }
 }
