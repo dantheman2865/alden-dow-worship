@@ -231,14 +231,22 @@ async function getBlob(key) {
   return tx("photos", "readonly", (store) => reqToPromise(store.get(key)));
 }
 
+// Read blobs from a photo record, tolerating the legacy { blob } schema.
+function recFull(rec) {
+  return rec.full || rec.blob;
+}
+function recThumb(rec) {
+  return rec.thumb || rec.full || rec.blob;
+}
+
 // Resolve a photo entry to a displayable src. variant is "thumb" (grid) or "full" (lightbox).
 export async function photoSrc(entry, variant = "full") {
   if (entry.kind === "repo") return variant === "thumb" ? entry.thumb : entry.full;
   const cacheKey = entry.key + ":" + variant;
   if (objectUrlCache.has(cacheKey)) return objectUrlCache.get(cacheKey);
   const rec = await getBlob(entry.key);
-  if (!rec) return "";
-  const blob = variant === "thumb" ? rec.thumb || rec.full : rec.full;
+  const blob = rec && (variant === "thumb" ? recThumb(rec) : recFull(rec));
+  if (!blob) return ""; // missing/legacy record — show a broken-image placeholder, never crash
   const url = URL.createObjectURL(blob);
   objectUrlCache.set(cacheKey, url);
   return url;
@@ -272,9 +280,9 @@ async function buildPublish() {
         const thumb = `photos/${edit.id}/thumb/${base}.jpg`;
         paths.push({ full, thumb });
         const rec = await getBlob(entry.key);
-        if (rec) {
-          photoFiles.push({ path: full, blob: rec.full });
-          photoFiles.push({ path: thumb, blob: rec.thumb || rec.full });
+        if (rec && recFull(rec)) {
+          photoFiles.push({ path: full, blob: recFull(rec) });
+          photoFiles.push({ path: thumb, blob: recThumb(rec) });
         }
       }
     }
