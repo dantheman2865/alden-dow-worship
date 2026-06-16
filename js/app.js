@@ -221,9 +221,22 @@ async function openDrawer(id) {
   await renderPhotos(id, eff);
 
   document.getElementById("drawer").hidden = false;
-  document.getElementById("drawer-overlay").hidden = false;
   // refresh list/markers to reflect active highlight
   await render();
+
+  // Zoom the map to the selected location (records without coordinates can't be located).
+  if (record.hasLocation) flyToRecord(record);
+}
+
+// Fly the map to a record, nudging the center left on wide screens so the marker
+// isn't hidden behind the detail panel.
+function flyToRecord(record) {
+  const targetZoom = Math.max(map.getZoom(), 14);
+  const point = map.project([record.lat, record.lng], targetZoom);
+  if (window.innerWidth > 820) point.x += 230; // ~half the 460px panel width
+  map.flyTo(map.unproject(point, targetZoom), targetZoom, { duration: 0.6 });
+  const marker = state.markers.get(record.id);
+  if (marker) marker.openTooltip();
 }
 
 function renderVisitSection(id, eff) {
