@@ -9,7 +9,10 @@ const state = {
   editMode: false,
   activeId: null,
   markers: new Map(), // id -> Leaflet marker
+  lightbox: { entries: [], index: 0 }, // photos currently viewable in the lightbox
 };
+
+let lightboxReqId = 0; // guards against an earlier slow load overwriting a newer one
 
 let map;
 let markerLayer;
@@ -310,10 +313,9 @@ async function renderPhotos(id, eff) {
     cell.innerHTML = `<img src="${thumbSrc}" alt="" loading="lazy" />${
       state.editMode ? `<button class="photo-remove" title="Remove">&times;</button>` : ""
     }`;
-    // Load the full-resolution image only when the user zooms in.
-    cell.querySelector("img").addEventListener("click", async () =>
-      openLightbox(await store.photoSrc(entry, "full"))
-    );
+    // Open the lightbox on the full gallery, starting at this photo. The full-res
+    // image is fetched lazily inside the lightbox.
+    cell.querySelector("img").addEventListener("click", () => openLightbox(eff.photos, i));
     if (state.editMode) {
       cell.querySelector(".photo-remove").addEventListener("click", async (ev) => {
         ev.stopPropagation();
@@ -370,10 +372,55 @@ function closeDrawer() {
 
 // ---- lightbox ----------------------------------------------------------------
 
-function openLightbox(src) {
-  const lb = document.getElementById("lightbox");
-  document.getElementById("lightbox-img").src = src;
-  lb.hidden = false;
+// Open the lightbox on a gallery (array of photo entries) at a starting index.
+function openLightbox(entries, index) {
+  state.lightbox = { entries, index };
+  document.getElementById("lightbox").hidden = false;
+  showLightboxPhoto();
+}
+
+function closeLightbox() {
+  document.getElementById("lightbox").hidden = true;
+}
+
+// Move within the current gallery, wrapping around the ends.
+function lightboxStep(delta) {
+  const { entries, index } = state.lightbox;
+  if (entries.length < 2) return;
+  state.lightbox.index = (index + delta + entries.length) % entries.length;
+  showLightboxPhoto();
+}
+
+// Render the current photo: clear the previous image, show a spinner, then swap in
+// the full-resolution image once it has decoded.
+async function showLightboxPhoto() {
+  const { entries, index } = state.lightbox;
+  const entry = entries[index];
+  const img = document.getElementById("lightbox-img");
+  const spinner = document.getElementById("lightbox-spinner");
+  const counter = document.getElementById("lightbox-counter");
+  const multi = entries.length > 1;
+
+  document.querySelector(".lightbox-prev").hidden = !multi;
+  document.querySelector(".lightbox-next").hidden = !multi;
+  counter.textContent = multi ? `${index + 1} / ${entries.length}` : "";
+
+  const reqId = ++lightboxReqId;
+  img.style.visibility = "hidden";
+  img.removeAttribute("src"); // drop the previous photo immediately — no stale flash
+  spinner.hidden = false;
+
+  const src = await store.photoSrc(entry, "full");
+  if (reqId !== lightboxReqId) return; // a newer navigation superseded this one
+  img.onload = () => {
+    if (reqId !== lightboxReqId) return;
+    spinner.hidden = true;
+    img.style.visibility = "visible";
+  };
+  img.onerror = () => {
+    if (reqId === lightboxReqId) spinner.hidden = true;
+  };
+  img.src = src;
 }
 
 // ---- publish bar -------------------------------------------------------------
@@ -420,15 +467,32 @@ function wireControls() {
   document.getElementById("drawer-close").addEventListener("click", closeDrawer);
   document.getElementById("drawer-overlay").addEventListener("click", closeDrawer);
 
-  // lightbox close
+  // lightbox: close on backdrop/stage click, navigate with the arrow buttons
   const lb = document.getElementById("lightbox");
-  lb.addEventListener("click", () => (lb.hidden = true));
+  lb.addEventListener("click", (e) => {
+    if (e.target === lb || e.target.classList.contains("lightbox-stage")) closeLightbox();
+  });
+  document.querySelector(".lightbox-close").addEventListener("click", closeLightbox);
+  document.querySelector(".lightbox-prev").addEventListener("click", (e) => {
+    e.stopPropagation();
+    lightboxStep(-1);
+  });
+  document.querySelector(".lightbox-next").addEventListener("click", (e) => {
+    e.stopPropagation();
+    lightboxStep(1);
+  });
 
-  // escape closes overlays
+  // keyboard: Escape closes; arrows navigate when the lightbox is open
   document.addEventListener("keydown", (e) => {
-    if (e.key !== "Escape") return;
-    if (!lb.hidden) lb.hidden = true;
-    else if (!document.getElementById("drawer").hidden) closeDrawer();
+    const lbOpen = !lb.hidden;
+    if (e.key === "Escape") {
+      if (lbOpen) closeLightbox();
+      else if (!document.getElementById("drawer").hidden) closeDrawer();
+    } else if (lbOpen && e.key === "ArrowLeft") {
+      lightboxStep(-1);
+    } else if (lbOpen && e.key === "ArrowRight") {
+      lightboxStep(1);
+    }
   });
 
   // publish actions

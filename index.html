@@ -80,7 +80,13 @@
     <!-- Lightbox for viewing photos -->
     <div class="lightbox" id="lightbox" hidden>
       <button class="lightbox-close" aria-label="Close">&times;</button>
-      <img id="lightbox-img" alt="" />
+      <button class="lightbox-nav lightbox-prev" aria-label="Previous photo">&#8249;</button>
+      <button class="lightbox-nav lightbox-next" aria-label="Next photo">&#8250;</button>
+      <div class="lightbox-stage">
+        <div class="lightbox-spinner" id="lightbox-spinner" hidden></div>
+        <img id="lightbox-img" alt="" />
+      </div>
+      <div class="lightbox-counter" id="lightbox-counter"></div>
     </div>
 
     <script type="module" src="js/app.js"></script>
